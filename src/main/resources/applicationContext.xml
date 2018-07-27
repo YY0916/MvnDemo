@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:aop="http://www.springframework.org/schema/aop"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:jpa="http://www.springframework.org/schema/data/jpa" 
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+    xmlns:tx="http://www.springframework.org/schema/tx" 
+	xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:util="http://www.springframework.org/schema/util"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+    http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+    http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+    http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+    http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+    http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.0.xsd">
+	
+	<!-- Redis连接池配置 -->
+	<bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+		<!-- 最大连接数 -->
+		<property name="maxTotal" value="30"/>
+		<!-- 最大空闲连接数 -->
+		<property name="maxIdle" value="10"/>
+		<!-- 每次释放连接的最大数目 -->
+		<property name="numTestsPerEvictionRun" value="1024"/>
+		<!-- 释放连接的扫描间隔（毫秒） -->
+		<property name="timeBetweenEvictionRunsMillis" value="30000"/>
+		<!-- 连接最小空闲时间 -->
+		<property name="minEvictableIdleTimeMillis" value="1800000"/>
+		<!-- 连接空闲多久后释放，当空闲时间大于该值且空闲连接大于最大空闲连接数是直接释放 -->
+		<property name="softMinEvictableIdleTimeMillis" value="10000"/>
+		<!-- 获取连接时的最大等待毫秒数，小于零：阻塞不确定的时间，默认-1 -->
+		<property name="maxWaitMillis" value="1500"/>
+		<!-- 在获取连接的时候检查有效性，默认为false -->
+		<property name="testOnBorrow" value="true"/>
+		<!-- 在空闲时检查有效性 默认false -->
+		<property name="testWhileIdle" value="true"/>
+		<!-- 连接耗尽时是否阻塞，false报异常，true阻塞知道超时，默认true -->
+		<property name="blockWhenExhausted" value="false"/>
+	</bean>
+    <!-- jedis客户端 -->
+    <bean id="redisClient" class="redis.clients.jedis.JedisPool">
+    	<constructor-arg name="host" value="localhost"></constructor-arg>
+    	<constructor-arg name="port" value="6379"></constructor-arg>
+    	<constructor-arg name="poolConfig" ref="jedisPoolConfig"></constructor-arg>
+    </bean>
+    
+    <!-- 注解扫描 -->
+    <context:component-scan base-package="com.sanyang"></context:component-scan>
+    
+    <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+    	<property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+    	<property name="url" value="jdbc:mysql://127.0.0.1:3306/mybatis?characterEncoding=utf8"/>
+    	<property name="username" value="root"/>
+    	<property name="password" value="root"/>
+    </bean>
+	
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"/>
+		<property name="mapperLocations" value="classpath:com/sanyang/mapper/*.xml"/>
+		<property name="typeAliasesPackage" value="com.sanyang.pojo"/>
+	</bean>
+	
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.sanyang.mapper"/>
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+</beans>
